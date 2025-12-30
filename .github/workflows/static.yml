@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المراجعة الفضائية 👽| قضايا مجتمعية</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Warm Neutrals & Academic Blue -->
+    <!-- Application Structure Plan: 
+         The app uses a Dashboard Layout. 
+         - Sidebar (Right): For navigation between the main "Issues" (Chapters).
+         - Main Content Area (Left): Displays the selected module.
+         - Modules: 
+            1. Overview (Intro & Importance).
+            2. Thematic Chapters (Population, Human Rights, Environment, Corruption).
+            3. Synthesis (Summary & Key Takeaways).
+         - Interaction: Users click sidebar items to swap content dynamically without reloading. Within chapters, interactive accordions and simple quizzes engage the learner.
+    -->
+    <!-- Visualization & Content Choices:
+         - Charts: Used for Population Growth and Environmental stats to visualize the magnitude of issues (Goal: Inform/Compare).
+         - Cards/Grids: Used for "Causes vs Effects" to break down dense text into digestible chunks (Goal: Organize).
+         - Interaction: Simple tab switching and visibility toggles to prevent cognitive overload.
+         - Justification: Charts make abstract numbers concrete. Interactivity keeps the student active rather than passive reading.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Amiri', serif;
+            background-color: #fdfbf7; /* Warm neutral background */
+            color: #1f2937;
+        }
+        h1, h2, h3, h4, .nav-item, button {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-nav {
+            background-color: #e0f2fe; /* light blue */
+            color: #0369a1; /* dark blue */
+            border-right: 4px solid #0369a1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 z-10 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                    👽
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">قضايا مجتمعية</h1>
+                    <p class="text-xs text-gray-500">جامعة عين شمس - عبُّود يُرحِب بكم 👽🤍</p>
+                </div>
+            </div>
+            <div class="hidden md:block text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full border">
+                إعداد: عبدالرحمن محمد فتحي
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-l border-gray-200 overflow-y-auto hidden md:block flex-shrink-0">
+            <nav class="p-4 space-y-2" id="desktop-nav">
+                <!-- Nav items injected via JS -->
+            </nav>
+            <div class="p-4 mt-4 bg-blue-50 m-4 rounded-lg">
+                <h2 class="font-bold text-blue-800 text-sm mb-3">رسالة أخيرة</h2>
+                <H4 class="font-bold text-rose-800 leading-relaxed">
+                                               -بعيدًا عن الهزار- <br>
+                                حافظ على قلبك , الفتن صعبة.
+...وإن مُت غدًا يا صديقي ف تذكرني بدُعاءّ صادق 
+والسلام لقلبك.🍃🤍
+</H4>
+            </div>
+        </aside>
+
+        <!-- Mobile Nav Toggle (Visible only on small screens) -->
+        <div class="md:hidden absolute top-20 left-4 z-20">
+            <button id="mobile-menu-btn" class="bg-blue-600 text-white p-2 rounded shadow-lg">
+                ☰ القائمة
+            </button>
+        </div>
+
+        <!-- Mobile Nav Overlay -->
+        <div id="mobile-nav-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden">
+            <div class="bg-white w-3/4 h-full p-4 overflow-y-auto transform transition-transform duration-300 translate-x-full" id="mobile-nav-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="font-bold text-lg">فصول الكتاب</h2>
+                    <button id="close-mobile-nav" class="text-gray-500 text-2xl">&times;</button>
+                </div>
+                <nav class="space-y-2" id="mobile-nav-list">
+                    <!-- Nav items injected via JS -->
+                </nav>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto bg-stone-50 p-4 md:p-8 scroll-smooth" id="main-content">
+            <!-- Dynamic Content Load Here -->
+        </main>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- DATA STORAGE ---
+        // structured content representing the book chapters
+        const appData = {
+            intro: {
+                id: 'intro',
+                title: 'مقدمة عامة',
+                icon: '🏠',
+                content: `
+                    <div class="max-w-4xl mx-auto fade-in">
+                        <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-8">
+                            <h2 class="text-3xl font-bold text-gray-800 mb-4 border-b pb-4">لماذا ندرس هذا الكتاب؟</h2>
+                            <p class="text-lg leading-loose text-gray-700 mb-6">
+                                يهدف كتاب <strong>"قضايا مجتمعية"</strong> إلى بناء وعي الطالب الجامعي بالتحديات التي تواجه المجتمع المصري. 
+                                الدراسة هنا ليست مجرد حفظ للمعلومات، بل هي محاولة لفهم <span class="bg-yellow-100 px-1 rounded">الجذور والأسباب</span> واقتراح <span class="bg-green-100 px-1 rounded">الحلول</span>.
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                <div class="p-4 bg-blue-50 rounded-lg">
+                                    <div class="text-3xl mb-2">💡</div>
+                                    <h3 class="font-bold text-blue-900">الوعي</h3>
+                                    <p class="text-sm text-blue-800">فهم المشكلات المحيطة بك بدقة.</p>
+                                </div>
+                                <div class="p-4 bg-teal-50 rounded-lg">
+                                    <div class="text-3xl mb-2">🤝</div>
+                                    <h3 class="font-bold text-teal-900">المشاركة</h3>
+                                    <p class="text-sm text-teal-800">دورك كطالب في الحل والمواجهة.</p>
+                                </div>
+                                <div class="p-4 bg-rose-50 rounded-lg">
+                                    <div class="text-3xl mb-2">🛡️</div>
+                                    <h3 class="font-bold text-rose-900">التحصين</h3>
+                                    <p class="text-sm text-rose-800">حماية العقل من الشائعات والأفكار الهدامة.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">خريطة الكتاب (المحاور الأساسية)</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center bg-gray-50 p-3 rounded-lg border-r-4 border-red-500">
+                                    <span class="font-bold ml-2">1. المشكلة السكانية:</span> الأبعاد، الآثار، وكيفية المواجهة.
+                                </div>
+                                <div class="flex items-center bg-gray-50 p-3 rounded-lg border-r-4 border-blue-500">
+                                    <span class="font-bold ml-2">2. حقوق الإنسان:</span> المواطنة، الحقوق والواجبات، والدستور.
+                                </div>
+                                <div class="flex items-center bg-gray-50 p-3 rounded-lg border-r-4 border-green-500">
+                                    <span class="font-bold ml-2">3. قضايا البيئة:</span> التلوث، التغير المناخي، والاستدامة.
+                                </div>
+                                <div class="flex items-center bg-gray-50 p-3 rounded-lg border-r-4 border-purple-500">
+                                    <span class="font-bold ml-2">4. الفساد والشفافية:</span> أسبابه، صوره، وآليات مكافحته.
+                                </div>
+                                <div class="flex items-center bg-gray-50 p-3 rounded-lg border-r-4 border-yellow-500">
+                                    <span class="font-bold ml-2">5. حروب الجيل الرابع:</span> الشائعات وتزييف الوعي.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            population: {
+                id: 'population',
+                title: 'المشكلة السكانية',
+                icon: '👥',
+                content: `
+                    <div class="max-w-5xl mx-auto fade-in">
+                        <div class="mb-6">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">الفصل الأول: المشكلة السكانية</h2>
+                            <p class="text-gray-600">من إعداد: أ.د. هشام مخلوف وآخرون</p>
+                        </div>
+
+                        <!-- Definition Section -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-500">
+                                <h3 class="text-xl font-bold text-gray-800 mb-3">ما هي المشكلة السكانية؟</h3>
+                                <p class="text-gray-700 leading-relaxed">
+                                    هي عدم التوازن بين <strong>عدد السكان</strong> من جهة، و<strong>الموارد والخدمات</strong> المتاحة من جهة أخرى.
+                                    ليست المشكلة في العدد المطلق فقط، بل في:
+                                </p>
+                                <ul class="list-disc list-inside mt-3 text-gray-700 space-y-1 mr-4">
+                                    <li>معدلات النمو السريع.</li>
+                                    <li>سوء توزيع السكان (التكدس في الوادي والدلتا).</li>
+                                    <li>تدني الخصائص السكانية (التعليم، الصحة).</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-xl shadow-sm flex flex-col justify-center items-center">
+                                <h3 class="text-lg font-bold text-gray-700 mb-4 w-full text-right">أبعاد المشكلة (المثلث السكاني)</h3>
+                                <div class="chart-container">
+                                    <canvas id="popDimChart"></canvas>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2 text-center">النمو، التوزيع، والخصائص هي أضلاع المشكلة.</p>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Causes & Effects -->
+                        <div class="mb-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">الأسباب والنتائج</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Causes -->
+                                <div class="bg-orange-50 p-5 rounded-lg border border-orange-100">
+                                    <h4 class="font-bold text-orange-800 mb-3 text-lg border-b border-orange-200 pb-2">🔴 الأسباب</h4>
+                                    <ul class="space-y-2">
+                                        <li class="flex items-start">
+                                            <span class="text-orange-500 ml-2 font-bold">1.</span>
+                                            <span class="text-sm text-gray-700"><strong>ارتفاع معدلات المواليد:</strong> بسبب الزواج المبكر والرغبة في "العزوة".</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-orange-500 ml-2 font-bold">2.</span>
+                                            <span class="text-sm text-gray-700"><strong>انخفاض الوفيات:</strong> نتيجة التحسن الصحي (وهو شيء إيجابي ولكنه يزيد الفجوة).</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-orange-500 ml-2 font-bold">3.</span>
+                                            <span class="text-sm text-gray-700"><strong>القيم الاجتماعية:</strong> تفضيل الذكور وتكرار الإنجاب حتى الحصول عليهم.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!-- Effects -->
+                                <div class="bg-red-50 p-5 rounded-lg border border-red-100">
+                                    <h4 class="font-bold text-red-800 mb-3 text-lg border-b border-red-200 pb-2">📉 النتائج السلبية</h4>
+                                    <ul class="space-y-2">
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 ml-2 font-bold">1.</span>
+                                            <span class="text-sm text-gray-700"><strong>اقتصادياً:</strong> التهام معدلات التنمية وزيادة البطالة.</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 ml-2 font-bold">2.</span>
+                                            <span class="text-sm text-gray-700"><strong>اجتماعياً:</strong> انتشار العشوائيات، الجريمة، والضغط على الخدمات.</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 ml-2 font-bold">3.</span>
+                                            <span class="text-sm text-gray-700"><strong>بيئياً:</strong> الزحف العمراني على الأراضي الزراعية.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Solutions -->
+                        <div class="bg-blue-900 text-white p-6 rounded-xl shadow-lg mb-8">
+                            <h3 class="text-xl font-bold mb-4 flex items-center">
+                                <span class="bg-blue-700 p-2 rounded-lg ml-3">✅</span>
+                                سبل المواجهة والحلول
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                <div class="bg-blue-800 p-4 rounded-lg">
+                                    <h4 class="font-bold text-blue-200 mb-2">التوعية وتغيير المفاهيم</h4>
+                                    <p class="text-sm text-blue-100">تصحيح المفاهيم الدينية والاجتماعية الخاطئة.</p>
+                                </div>
+                                <div class="bg-blue-800 p-4 rounded-lg">
+                                    <h4 class="font-bold text-blue-200 mb-2">التمكين الاقتصادي</h4>
+                                    <p class="text-sm text-blue-100">تشغيل المرأة والاهتمام بالمشروعات الصغيرة.</p>
+                                </div>
+                                <div class="bg-blue-800 p-4 rounded-lg">
+                                    <h4 class="font-bold text-blue-200 mb-2">تفعيل القوانين</h4>
+                                    <p class="text-sm text-blue-100">مثل قوانين منع عمالة الأطفال وتجريم الزواج المبكر.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Section -->
+                        <div class="bg-gray-100 p-6 rounded-xl border border-gray-200">
+                            <h3 class="font-bold text-gray-800 mb-3">🧐 اختبر فهمك</h3>
+                            <p class="mb-4 text-sm text-gray-600">هل المشكلة السكانية تتعلق بالعدد فقط؟</p>
+                            <div class="flex gap-3">
+                                <button onclick="alert('إجابة خاطئة. تذكر: المشكلة لها ثلاثة أبعاد: النمو، التوزيع، والخصائص.')" class="bg-white border border-gray-300 px-4 py-2 rounded hover:bg-red-50 transition">نعم، العدد هو الأساس</button>
+                                <button onclick="alert('أحسنت! المشكلة هي علاقة غير متوازنة بين السكان والموارد، بالإضافة لسوء التوزيع وتدني الخصائص.')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">لا، تتعلق بالموارد والتوزيع أيضاً</button>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            human_rights: {
+                id: 'human_rights',
+                title: 'حقوق الإنسان',
+                icon: '⚖️',
+                content: `
+                    <div class="max-w-5xl mx-auto fade-in">
+                        <div class="mb-6">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">الفصل الثاني: حقوق الإنسان والمواطنة</h2>
+                            <p class="text-gray-600">القانون والدستور: الحقوق والواجبات</p>
+                        </div>
+
+                        <!-- Core Concepts Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-purple-500 hover:shadow-lg transition">
+                                <div class="text-4xl mb-3">📜</div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">المواطنة</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    علاقة قانونية بين الفرد والدولة، تقوم على المساواة الكاملة دون تمييز، وتتضمن معادلة (الحقوق مقابل الواجبات).
+                                </p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-indigo-500 hover:shadow-lg transition">
+                                <div class="text-4xl mb-3">🤝</div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">حقوق الإنسان</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    هي حقوق متأصلة في جميع البشر، مهما كانت جنسيتهم أو مكان إقامتهم أو جنسهم أو أصلهم الوطني أو العرقي أو لونهم أو دينهم.
+                                </p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-pink-500 hover:shadow-lg transition">
+                                <div class="text-4xl mb-3">🏛️</div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">الدستور المصري</h3>
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    كفل الدستور حزمة واسعة من الحقوق (السياسية، الاقتصادية، الاجتماعية) وألزم الدولة بصيانتها.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Types of Rights Visualization -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">أنواع الحقوق (التصنيف العالمي)</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="bg-purple-50 p-4 rounded text-center">
+                                    <h4 class="font-bold text-purple-800 mb-2">حقوق مدنية</h4>
+                                    <p class="text-xs text-gray-600">الحق في الحياة، الحرية، الأمن الشخصي.</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded text-center">
+                                    <h4 class="font-bold text-blue-800 mb-2">حقوق سياسية</h4>
+                                    <p class="text-xs text-gray-600">الترشح، الانتخاب، التعبير عن الرأي.</p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded text-center">
+                                    <h4 class="font-bold text-green-800 mb-2">حقوق اقتصادية</h4>
+                                    <p class="text-xs text-gray-600">العمل، التملك، المستوى المعيشي اللائق.</p>
+                                </div>
+                                <div class="bg-yellow-50 p-4 rounded text-center">
+                                    <h4 class="font-bold text-yellow-800 mb-2">حقوق ثقافية</h4>
+                                    <p class="text-xs text-gray-600">التعليم، المشاركة في الحياة الثقافية.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Features List -->
+                        <div class="bg-indigo-900 text-white rounded-xl p-6 mb-8">
+                             <h3 class="text-lg font-bold mb-4">خصائص حقوق الإنسان</h3>
+                             <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <li class="flex items-center"><span class="bg-indigo-700 p-2 rounded-full ml-3 text-xs">1</span> عالمية (للجميع في كل مكان).</li>
+                                 <li class="flex items-center"><span class="bg-indigo-700 p-2 rounded-full ml-3 text-xs">2</span> غير قابلة للتجزئة (كل الحقوق مترابطة).</li>
+                                 <li class="flex items-center"><span class="bg-indigo-700 p-2 rounded-full ml-3 text-xs">3</span> غير قابلة للتصرف (لا يمكن لأحد نزعها منك).</li>
+                                 <li class="flex items-center"><span class="bg-indigo-700 p-2 rounded-full ml-3 text-xs">4</span> المساواة وعدم التمييز.</li>
+                             </ul>
+                        </div>
+                    </div>
+                `
+            },
+            environment: {
+                id: 'environment',
+                title: 'قضايا البيئة',
+                icon: '🌱',
+                content: `
+                     <div class="max-w-5xl mx-auto fade-in">
+                        <div class="mb-6">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">الفصل الثالث: القضايا البيئية</h2>
+                            <p class="text-gray-600">من إعداد: أ.د. نهى سمير دنيا وآخرون</p>
+                        </div>
+
+                        <div class="bg-green-50 border-r-4 border-green-600 p-4 mb-6 rounded shadow-sm">
+                            <p class="font-bold text-green-900">تعريف البيئة:</p>
+                            <p class="text-green-800 text-sm">هي المحيط الحيوي الذي يعيش فيه الإنسان، ويشمل العناصر الطبيعية (ماء، هواء، تربة) والعناصر التي شيدها الإنسان.</p>
+                        </div>
+
+                        <!-- Layout for Pollution Types -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                             <!-- Air -->
+                             <div class="bg-white rounded-xl shadow p-4 border-t-4 border-gray-400">
+                                <div class="h-32 bg-gray-100 rounded mb-4 flex items-center justify-center text-4xl">🏭</div>
+                                <h3 class="font-bold text-lg mb-2 text-center">تلوث الهواء</h3>
+                                <p class="text-xs text-gray-600 mb-2"><strong>المصادر:</strong> عوادم السيارات، المصانع، حرق المخلفات (السحابة السوداء).</p>
+                                <p class="text-xs text-red-500"><strong>الأثر:</strong> أمراض الجهاز التنفسي، الاحتباس الحراري.</p>
+                             </div>
+                             
+                             <!-- Water -->
+                             <div class="bg-white rounded-xl shadow p-4 border-t-4 border-blue-400">
+                                <div class="h-32 bg-blue-50 rounded mb-4 flex items-center justify-center text-4xl">💧</div>
+                                <h3 class="font-bold text-lg mb-2 text-center">تلوث الماء</h3>
+                                <p class="text-xs text-gray-600 mb-2"><strong>المصادر:</strong> الصرف الصحي، المخلفات الصناعية، الأسمدة الزراعية.</p>
+                                <p class="text-xs text-red-500"><strong>الأثر:</strong> الفشل الكلوي، نفوق الأسماك، نقص المياه الصالحة.</p>
+                             </div>
+
+                             <!-- Climate -->
+                             <div class="bg-white rounded-xl shadow p-4 border-t-4 border-orange-400">
+                                <div class="h-32 bg-orange-50 rounded mb-4 flex items-center justify-center text-4xl">🌡️</div>
+                                <h3 class="font-bold text-lg mb-2 text-center">التغيرات المناخية</h3>
+                                <p class="text-xs text-gray-600 mb-2"><strong>السبب:</strong> غازات الاحتباس الحراري (CO2).</p>
+                                <p class="text-xs text-red-500"><strong>الأثر:</strong> ارتفاع منسوب البحار (غرق الدلتا)، تصحر الأراضي، تطرف الطقس.</p>
+                             </div>
+                        </div>
+
+                        <!-- Chart: Environmental Impact Visualization -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8 flex flex-col items-center">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">مساهمة القطاعات في التلوث (نموذج توضيحي)</h3>
+                            <div class="chart-container">
+                                <canvas id="envChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Green Concept -->
+                        <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-bold mb-3">التنمية المستدامة</h3>
+                            <p class="mb-4">"تلبية احتياجات الحاضر دون المساس بقدة الأجيال القادمة على تلبية احتياجاتها."</p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs">
+                                <span class="bg-green-700 p-2 rounded">الطاقة المتجددة</span>
+                                <span class="bg-green-700 p-2 rounded">إعادة التدوير</span>
+                                <span class="bg-green-700 p-2 rounded">الاقتصاد الأخضر</span>
+                                <span class="bg-green-700 p-2 rounded">ترشيد الاستهلاك</span>
+                            </div>
+                        </div>
+                     </div>
+                `
+            },
+            corruption: {
+                id: 'corruption',
+                title: 'الفساد والشائعات',
+                icon: '🚫',
+                content: `
+                    <div class="max-w-5xl mx-auto fade-in">
+                        <div class="mb-6">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">الفصل الرابع: الفساد الإداري وحروب الشائعات</h2>
+                        </div>
+
+                        <!-- Tabs for Sub-topics -->
+                        <div class="flex border-b border-gray-300 mb-6">
+                            <button onclick="toggleCorruptionTab('corr')" id="tab-corr" class="flex-1 py-2 text-center border-b-2 border-red-600 font-bold text-red-700 bg-red-50">مكافحة الفساد</button>
+                            <button onclick="toggleCorruptionTab('rumors')" id="tab-rumors" class="flex-1 py-2 text-center text-gray-500 hover:text-gray-700">حروب الجيل الرابع (الشائعات)</button>
+                        </div>
+
+                        <!-- Corruption Content -->
+                        <div id="content-corr" class="block">
+                            <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border-r-4 border-red-500">
+                                <h3 class="font-bold text-xl mb-3">تعريف الفساد</h3>
+                                <p class="text-gray-700">هو سوء استغلال السلطة المخولة لتحقيق مكاسب خاصة. لا يقتصر على الرشوة المالية فقط، بل يشمل المحسوبية، وإهدار المال العام، والتباطؤ في الإنجاز.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-gray-50 p-5 rounded-lg">
+                                    <h4 class="font-bold text-gray-800 mb-3">أسباب الفساد</h4>
+                                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-2">
+                                        <li>ضعف الوازع الديني والأخلاقي.</li>
+                                        <li>تدني الرواتب ومستوى المعيشة.</li>
+                                        <li>تعقيد الإجراءات الإدارية (البيروقراطية).</li>
+                                        <li>غياب الشفافية والمحاسبة.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-50 p-5 rounded-lg">
+                                    <h4 class="font-bold text-gray-800 mb-3">آليات المكافحة</h4>
+                                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-2">
+                                        <li>التحول الرقمي (ميكنة الخدمات) لفصل مقدم الخدمة عن طالبها.</li>
+                                        <li>تفعيل دور الأجهزة الرقابية (الرقابة الإدارية).</li>
+                                        <li>تطبيق مبدأ الثواب والعقاب.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rumors Content -->
+                        <div id="content-rumors" class="hidden">
+                            <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200 mb-6">
+                                <h3 class="font-bold text-yellow-900 text-lg mb-2">الشائعة (سلاح الجيل الرابع)</h3>
+                                <p class="text-sm text-yellow-800 mb-4">خبر أو معلومة مكذوبة أو مبالغ فيها، يتم نشرها بدون مصدر موثوق بهدف إثارة البلبلة أو الإحباط.</p>
+                                
+                                <div class="bg-white p-4 rounded border border-yellow-100">
+                                    <h4 class="font-bold text-sm mb-2 text-center">معادلة الشائعة</h4>
+                                    <div class="flex justify-center items-center gap-2 text-lg font-bold">
+                                        <span class="text-gray-600">أهمية الموضوع</span>
+                                        <span class="text-red-500">×</span>
+                                        <span class="text-gray-600">الغموض</span>
+                                        <span class="text-red-500">=</span>
+                                        <span class="text-red-700">قوة الشائعة</span>
+                                    </div>
+                                    <p class="text-xs text-center mt-2 text-gray-500">كلما زاد الغموض حول موضوع مهم، انتشرت الشائعة أسرع.</p>
+                                </div>
+                            </div>
+
+                            <h3 class="font-bold text-gray-800 mb-3">كيف تواجه الشائعة؟</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                <div class="p-4 border rounded-lg hover:bg-gray-50">
+                                    <div class="text-2xl mb-2">🛑</div>
+                                    <h4 class="font-bold text-sm">توقف</h4>
+                                    <p class="text-xs text-gray-500">لا تشارك الخبر فوراً.</p>
+                                </div>
+                                <div class="p-4 border rounded-lg hover:bg-gray-50">
+                                    <div class="text-2xl mb-2">🔍</div>
+                                    <h4 class="font-bold text-sm">تحقق</h4>
+                                    <p class="text-xs text-gray-500">ابحث عن المصدر الرسمي.</p>
+                                </div>
+                                <div class="p-4 border rounded-lg hover:bg-gray-50">
+                                    <div class="text-2xl mb-2">📢</div>
+                                    <h4 class="font-bold text-sm">صحح</h4>
+                                    <p class="text-xs text-gray-500">انشر المعلومة الصحيحة.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            summary: {
+                id: 'summary',
+                title: 'الخلاصة والنتائج',
+                icon: '⭐',
+                content: `
+                    <div class="max-w-4xl mx-auto fade-in">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">خلاصة الكتاب</h2>
+                        
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+                            <table class="w-full text-right text-sm">
+                                <thead class="bg-gray-100 text-gray-900 font-bold">
+                                    <tr>
+                                        <th class="p-4 w-1/4">القضية</th>
+                                        <th class="p-4 w-1/4">الكلمة المفتاحية</th>
+                                        <th class="p-4 w-1/2">الخلاصة</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="p-4 font-bold text-red-700">السكان</td>
+                                        <td class="p-4 font-bold">التوازن</td>
+                                        <td class="p-4 text-gray-600">لابد من خفض النمو السكاني ورفع جودة الخصائص البشرية لتحقيق التنمية.</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="p-4 font-bold text-purple-700">حقوق الإنسان</td>
+                                        <td class="p-4 font-bold">الكرامة</td>
+                                        <td class="p-4 text-gray-600">المواطنة هي الأساس، والحقوق تقابلها واجبات تجاه المجتمع.</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="p-4 font-bold text-green-700">البيئة</td>
+                                        <td class="p-4 font-bold">الاستدامة</td>
+                                        <td class="p-4 text-gray-600">الحفاظ على الموارد للأجيال القادمة واجب بقاء، وليس رفاهية.</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="p-4 font-bold text-yellow-700">الفساد والشائعات</td>
+                                        <td class="p-4 font-bold">الوعي</td>
+                                        <td class="p-4 text-gray-600">الرقمنة تحارب الفساد، والوعي النقدي يحارب الشائعات.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-center p-6 bg-blue-50 rounded-xl border border-blue-200">
+                            <h3 class="font-bold text-blue-900 mb-2">وفي النهاية</h3>
+                            <p class="text-blue-800">
+                               هذا المقرر يهدف لتحويلك من "متلقي" للمشكلات إلى "مساهم" في الحل.
+ابدأ بنفسك: رشد استهلاكك، تحقق من الأخبار، واعرف حقوقك. <br>
+                           ومش تنسي...
+                            </p>
+
+ <h4 class="font-bold text-blue-800 text-sm mb-2">الفضائي واحد بس 🤍👽☝</h4>
+😉🤍
+
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // --- CHART CONFIGURATIONS ---
+        function renderCharts(pageId) {
+            // Destroy existing charts to prevent canvas reuse errors is not strictly needed with explicit ID checks, 
+            // but good practice if we were reusing canvas IDs. Here we have unique IDs per section.
+            
+            if (pageId === 'population') {
+                const ctx = document.getElementById('popDimChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['النمو السكاني المرتفع', 'سوء التوزيع الجغرافي', 'تدني الخصائص (التعليم/الصحة)'],
+                        datasets: [{
+                            data: [40, 35, 25], // Approximate weight of focus in curriculum
+                            backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { family: 'Amiri', size: 14 } } }
+                        }
+                    }
+                });
+            } else if (pageId === 'environment') {
+                const ctx = document.getElementById('envChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['الطاقة والصناعة', 'النقل والمواصلات', 'حرق المخلفات', 'الزراعة'],
+                        datasets: [{
+                            label: 'نسبة المساهمة في الانبعاثات (تقديري)',
+                            data: [45, 25, 15, 15],
+                            backgroundColor: '#10b981',
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- CORE LOGIC ---
+        const mainContent = document.getElementById('main-content');
+        const desktopNav = document.getElementById('desktop-nav');
+        const mobileNavList = document.getElementById('mobile-nav-list');
+        const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+        const mobileNavContent = document.getElementById('mobile-nav-content');
+
+        // Render Nav Items
+        const navKeys = Object.keys(appData);
+        navKeys.forEach(key => {
+            const item = appData[key];
+            const btnHtml = `
+                <button onclick="loadContent('${key}')" id="nav-${key}" class="nav-item w-full text-right px-4 py-3 rounded-lg hover:bg-gray-100 transition flex items-center gap-3 text-gray-700">
+                    <span class="text-xl">${item.icon}</span>
+                    <span class="font-medium">${item.title}</span>
+                </button>
+            `;
+            desktopNav.innerHTML += btnHtml;
+            mobileNavList.innerHTML += btnHtml;
+        });
+
+        // Load Content Function
+        function loadContent(key) {
+            // Update UI Active State
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active-nav'));
+            document.querySelectorAll(`#nav-${key}`).forEach(el => el.classList.add('active-nav'));
+
+            // Inject Content
+            mainContent.innerHTML = appData[key].content;
+            
+            // Scroll to top
+            mainContent.scrollTop = 0;
+
+            // Render Charts if exist
+            setTimeout(() => renderCharts(key), 100);
+
+            // Close mobile menu if open
+            closeMobileMenu();
+        }
+
+        // Sub-tab logic for Corruption section
+        window.toggleCorruptionTab = function(tab) {
+            const corrContent = document.getElementById('content-corr');
+            const rumorsContent = document.getElementById('content-rumors');
+            const tabCorr = document.getElementById('tab-corr');
+            const tabRumors = document.getElementById('tab-rumors');
+
+            if (tab === 'corr') {
+                corrContent.classList.remove('hidden');
+                rumorsContent.classList.add('hidden');
+                
+                tabCorr.classList.add('border-b-2', 'border-red-600', 'font-bold', 'text-red-700', 'bg-red-50');
+                tabCorr.classList.remove('text-gray-500');
+                
+                tabRumors.classList.remove('border-b-2', 'border-red-600', 'font-bold', 'text-red-700', 'bg-red-50');
+                tabRumors.classList.add('text-gray-500');
+            } else {
+                corrContent.classList.add('hidden');
+                rumorsContent.classList.remove('hidden');
+
+                tabRumors.classList.add('border-b-2', 'border-red-600', 'font-bold', 'text-red-700', 'bg-red-50');
+                tabRumors.classList.remove('text-gray-500');
+
+                tabCorr.classList.remove('border-b-2', 'border-red-600', 'font-bold', 'text-red-700', 'bg-red-50');
+                tabCorr.classList.add('text-gray-500');
+            }
+        };
+
+        // Mobile Menu Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeMobileNavBtn = document.getElementById('close-mobile-nav');
+
+        function openMobileMenu() {
+            mobileNavOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                mobileNavContent.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeMobileMenu() {
+            mobileNavContent.classList.add('translate-x-full');
+            setTimeout(() => {
+                mobileNavOverlay.classList.add('hidden');
+            }, 300);
+        }
+
+        mobileMenuBtn.addEventListener('click', openMobileMenu);
+        closeMobileNavBtn.addEventListener('click', closeMobileMenu);
+        mobileNavOverlay.addEventListener('click', (e) => {
+            if (e.target === mobileNavOverlay) closeMobileMenu();
+        });
+
+        // Initialize App
+        loadContent('intro');
+
+    </script>
+</body>
+</html>
